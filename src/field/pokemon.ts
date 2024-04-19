@@ -27,7 +27,7 @@ import { TempBattleStat } from "../data/temp-battle-stat";
 import { ArenaTagSide, WeakenMoveScreenTag, WeakenMoveTypeTag } from "../data/arena-tag";
 import { ArenaTagType } from "../data/enums/arena-tag-type";
 import { Biome } from "../data/enums/biome";
-import { Ability, AbAttr, BattleStatMultiplierAbAttr, BlockCritAbAttr, BonusCritAbAttr, BypassBurnDamageReductionAbAttr, FieldPriorityMoveImmunityAbAttr, FieldVariableMovePowerAbAttr, IgnoreOpponentStatChangesAbAttr, MoveImmunityAbAttr, MoveTypeChangeAttr, PreApplyBattlerTagAbAttr, PreDefendFullHpEndureAbAttr, ReceivedMoveDamageMultiplierAbAttr, ReduceStatusEffectDurationAbAttr, StabBoostAbAttr, StatusEffectImmunityAbAttr, TypeImmunityAbAttr, VariableMovePowerAbAttr, VariableMoveTypeAbAttr, WeightMultiplierAbAttr, allAbilities, applyAbAttrs, applyBattleStatMultiplierAbAttrs, applyPreApplyBattlerTagAbAttrs, applyPreAttackAbAttrs, applyPreDefendAbAttrs, applyPreSetStatusAbAttrs, UnsuppressableAbilityAbAttr, SuppressFieldAbilitiesAbAttr, NoFusionAbilityAbAttr, MultCritAbAttr, IgnoreTypeImmunityAbAttr, DamageBoostAbAttr, IgnoreTypeStatusEffectImmunityAbAttr, ConditionalCritAbAttr } from "../data/ability";
+import { Ability, AbAttr, BattleStatMultiplierAbAttr, BlockCritAbAttr, BonusCritAbAttr, BypassBurnDamageReductionAbAttr, FieldPriorityMoveImmunityAbAttr, FieldVariableMovePowerAbAttr, IgnoreOpponentStatChangesAbAttr, MoveImmunityAbAttr, MoveTypeChangeAttr, PreApplyBattlerTagAbAttr, PreDefendFullHpEndureAbAttr, ReceivedMoveDamageMultiplierAbAttr, ReduceStatusEffectDurationAbAttr, StabBoostAbAttr, StatusEffectImmunityAbAttr, TypeImmunityAbAttr, VariableMovePowerAbAttr, VariableMoveTypeAbAttr, WeightMultiplierAbAttr, allAbilities, applyAbAttrs, applyBattleStatMultiplierAbAttrs, applyPreApplyBattlerTagAbAttrs, applyPreAttackAbAttrs, applyPreDefendAbAttrs, applyPreSetStatusAbAttrs, UnsuppressableAbilityAbAttr, SuppressFieldAbilitiesAbAttr, NoFusionAbilityAbAttr, MultCritAbAttr, IgnoreTypeImmunityAbAttr, DamageBoostAbAttr, IgnoreTypeStatusEffectImmunityAbAttr, ConditionalCritAbAttr, PreDefendDisguiseNullifyDamageAbAttr } from "../data/ability";
 import { Abilities } from "#app/data/enums/abilities";
 import PokemonData from "../system/pokemon-data";
 import { BattlerIndex } from "../battle";
@@ -1624,254 +1624,259 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
 
     switch (moveCategory) {
     case MoveCategory.PHYSICAL:
-    case MoveCategory.SPECIAL:
-      const isPhysical = moveCategory === MoveCategory.PHYSICAL;
-      const power = new Utils.NumberHolder(move.power);
-      const sourceTeraType = source.getTeraType();
-      if (sourceTeraType !== Type.UNKNOWN && sourceTeraType === type && power.value < 60 && move.priority <= 0 && !move.getAttrs(MultiHitAttr).length && !this.scene.findModifier(m => m instanceof PokemonMultiHitModifier && m.pokemonId === source.id)) {
-        power.value = 60;
-      }
-      applyPreAttackAbAttrs(VariableMovePowerAbAttr, source, this, battlerMove, power);
-      this.scene.getField(true).map(p => applyPreAttackAbAttrs(FieldVariableMovePowerAbAttr, this, source, battlerMove, power));
-
-      applyPreDefendAbAttrs(ReceivedMoveDamageMultiplierAbAttr, this, source, battlerMove, cancelled, power);
-
-      power.value *= typeChangeMovePowerMultiplier.value;
-
-      if (!typeless) {
-        applyPreDefendAbAttrs(TypeImmunityAbAttr, this, source, battlerMove, cancelled, typeMultiplier);
-      }
-      if (!cancelled.value) {
-        applyPreDefendAbAttrs(MoveImmunityAbAttr, this, source, battlerMove, cancelled, typeMultiplier);
-        defendingSidePlayField.forEach((p) => applyPreDefendAbAttrs(FieldPriorityMoveImmunityAbAttr, p, source, battlerMove, cancelled, typeMultiplier));
-      }
-
-      if (cancelled.value) {
-        result = HitResult.NO_EFFECT;
-      } else {
-        const typeBoost = source.findTag(t => t instanceof TypeBoostTag && (t as TypeBoostTag).boostedType === type) as TypeBoostTag;
-        if (typeBoost) {
-          power.value *= typeBoost.boostValue;
-          if (typeBoost.oneUse) {
-            source.removeTag(typeBoost.tagType);
-          }
+      case MoveCategory.SPECIAL:
+        const isPhysical = moveCategory === MoveCategory.PHYSICAL;
+        const power = new Utils.NumberHolder(move.power);
+        const sourceTeraType = source.getTeraType();
+        if (sourceTeraType !== Type.UNKNOWN && sourceTeraType === type && power.value < 60 && move.priority <= 0 && !move.getAttrs(MultiHitAttr).length && !this.scene.findModifier(m => m instanceof PokemonMultiHitModifier && m.pokemonId === source.id)) {
+          power.value = 60;
         }
-        const arenaAttackTypeMultiplier = new Utils.NumberHolder(this.scene.arena.getAttackTypeMultiplier(type, source.isGrounded()));
-        applyMoveAttrs(IgnoreWeatherTypeDebuffAttr, source, this, move, arenaAttackTypeMultiplier);
-        if (this.scene.arena.getTerrainType() === TerrainType.GRASSY && this.isGrounded() && type === Type.GROUND && move.moveTarget === MoveTarget.ALL_NEAR_OTHERS) {
-          power.value /= 2;
-        }
-        applyMoveAttrs(VariablePowerAttr, source, this, move, power);
-        this.scene.applyModifiers(PokemonMultiHitModifier, source.isPlayer(), source, new Utils.IntegerHolder(0), power);
+        applyPreAttackAbAttrs(VariableMovePowerAbAttr, source, this, battlerMove, power);
+        this.scene.getField(true).map(p => applyPreAttackAbAttrs(FieldVariableMovePowerAbAttr, this, source, battlerMove, power));
+  
+        applyPreDefendAbAttrs(ReceivedMoveDamageMultiplierAbAttr, this, source, battlerMove, cancelled, power);
+  
+        power.value *= typeChangeMovePowerMultiplier.value;
+  
         if (!typeless) {
-          this.scene.arena.applyTags(WeakenMoveTypeTag, type, power);
-          this.scene.applyModifiers(AttackTypeBoosterModifier, source.isPlayer(), source, type, power);
+          applyPreDefendAbAttrs(TypeImmunityAbAttr, this, source, battlerMove, cancelled, typeMultiplier);
         }
-        if (source.getTag(HelpingHandTag)) {
-          power.value *= 1.5;
+        if (!cancelled.value) {
+          applyPreDefendAbAttrs(MoveImmunityAbAttr, this, source, battlerMove, cancelled, typeMultiplier);
+          defendingSidePlayField.forEach((p) => applyPreDefendAbAttrs(FieldPriorityMoveImmunityAbAttr, p, source, battlerMove, cancelled, typeMultiplier));
         }
-        let isCritical: boolean;
-        const critOnly = new Utils.BooleanHolder(false);
-        const critAlways = source.getTag(BattlerTagType.ALWAYS_CRIT);
-        applyMoveAttrs(CritOnlyAttr, source, this, move, critOnly);
-        applyAbAttrs(ConditionalCritAbAttr, source, null, critOnly, this, move);
-        if (critOnly.value || critAlways) {
-          isCritical = true;
+  
+        if (cancelled.value) {
+          result = HitResult.NO_EFFECT;
         } else {
-          const critLevel = new Utils.IntegerHolder(0);
-          applyMoveAttrs(HighCritAttr, source, this, move, critLevel);
-          this.scene.applyModifiers(TempBattleStatBoosterModifier, source.isPlayer(), TempBattleStat.CRIT, critLevel);
-          const bonusCrit = new Utils.BooleanHolder(false);
-          if (applyAbAttrs(BonusCritAbAttr, source, null, bonusCrit)) {
-            if (bonusCrit.value) {
-              critLevel.value += 1;
+          const typeBoost = source.findTag(t => t instanceof TypeBoostTag && (t as TypeBoostTag).boostedType === type) as TypeBoostTag;
+          if (typeBoost) {
+            power.value *= typeBoost.boostValue;
+            if (typeBoost.oneUse) {
+              source.removeTag(typeBoost.tagType);
             }
           }
-          if (source.getTag(BattlerTagType.CRIT_BOOST)) {
-            critLevel.value += 2;
+          const arenaAttackTypeMultiplier = new Utils.NumberHolder(this.scene.arena.getAttackTypeMultiplier(type, source.isGrounded()));
+          applyMoveAttrs(IgnoreWeatherTypeDebuffAttr, source, this, move, arenaAttackTypeMultiplier);
+          if (this.scene.arena.getTerrainType() === TerrainType.GRASSY && this.isGrounded() && type === Type.GROUND && move.moveTarget === MoveTarget.ALL_NEAR_OTHERS) {
+            power.value /= 2;
           }
-          const critChance = [24, 8, 2, 1][Math.max(0, Math.min(critLevel.value, 3))];
-          isCritical = !source.getTag(BattlerTagType.NO_CRIT) && (critChance === 1 || !this.scene.randBattleSeedInt(critChance));
-        }
-        if (isCritical) {
-          const blockCrit = new Utils.BooleanHolder(false);
-          applyAbAttrs(BlockCritAbAttr, this, null, blockCrit);
-          if (blockCrit.value) {
+          applyMoveAttrs(VariablePowerAttr, source, this, move, power);
+          this.scene.applyModifiers(PokemonMultiHitModifier, source.isPlayer(), source, new Utils.IntegerHolder(0), power);
+          if (!typeless) {
+            this.scene.arena.applyTags(WeakenMoveTypeTag, type, power);
+            this.scene.applyModifiers(AttackTypeBoosterModifier, source.isPlayer(), source, type, power);
+          }
+          if (source.getTag(HelpingHandTag)) {
+            power.value *= 1.5;
+          }
+          let isCritical: boolean;
+          const critOnly = new Utils.BooleanHolder(false);
+          const critAlways = source.getTag(BattlerTagType.ALWAYS_CRIT);
+          applyMoveAttrs(CritOnlyAttr, source, this, move, critOnly);
+          applyAbAttrs(ConditionalCritAbAttr, source, null, critOnly, this, move);
+          if (critOnly.value || critAlways) {
+            isCritical = true;
+          } else {
+            const critLevel = new Utils.IntegerHolder(0);
+            applyMoveAttrs(HighCritAttr, source, this, move, critLevel);
+            this.scene.applyModifiers(TempBattleStatBoosterModifier, source.isPlayer(), TempBattleStat.CRIT, critLevel);
+            const bonusCrit = new Utils.BooleanHolder(false);
+            if (applyAbAttrs(BonusCritAbAttr, source, null, bonusCrit)) {
+              if (bonusCrit.value) {
+                critLevel.value += 1;
+              }
+            }
+            if (source.getTag(BattlerTagType.CRIT_BOOST)) {
+              critLevel.value += 2;
+            }
+            const critChance = [24, 8, 2, 1][Math.max(0, Math.min(critLevel.value, 3))];
+            isCritical = !source.getTag(BattlerTagType.NO_CRIT) && (critChance === 1 || !this.scene.randBattleSeedInt(critChance));
+          }
+          if (isCritical) {
+            const blockCrit = new Utils.BooleanHolder(false);
+            applyAbAttrs(BlockCritAbAttr, this, null, blockCrit);
+            if (blockCrit.value) {
+              isCritical = false;
+            }
+          }
+          const sourceAtk = new Utils.IntegerHolder(source.getBattleStat(isPhysical ? Stat.ATK : Stat.SPATK, this, null, isCritical));
+          const targetDef = new Utils.IntegerHolder(this.getBattleStat(isPhysical ? Stat.DEF : Stat.SPDEF, source, move, isCritical));
+          const criticalMultiplier = new Utils.NumberHolder(isCritical ? 1.5 : 1);
+          applyAbAttrs(MultCritAbAttr, source, null, criticalMultiplier);
+          const screenMultiplier = new Utils.NumberHolder(1);
+          if (!isCritical) {
+            this.scene.arena.applyTagsForSide(WeakenMoveScreenTag, this.isPlayer() ? ArenaTagSide.PLAYER : ArenaTagSide.ENEMY, move.category, this.scene.currentBattle.double, screenMultiplier);
+          }
+          const isTypeImmune = (typeMultiplier.value * arenaAttackTypeMultiplier.value) === 0;
+          const sourceTypes = source.getTypes();
+          const matchesSourceType = sourceTypes[0] === type || (sourceTypes.length > 1 && sourceTypes[1] === type);
+          const stabMultiplier = new Utils.NumberHolder(1);
+          if (sourceTeraType === Type.UNKNOWN && matchesSourceType) {
+            stabMultiplier.value += 0.5;
+          } else if (sourceTeraType !== Type.UNKNOWN && sourceTeraType === type) {
+            stabMultiplier.value += 0.5;
+          }
+  
+          applyAbAttrs(StabBoostAbAttr, source, null, stabMultiplier);
+  
+          if (sourceTeraType !== Type.UNKNOWN && matchesSourceType) {
+            stabMultiplier.value = Math.min(stabMultiplier.value + 0.5, 2.25);
+          }
+  
+          applyMoveAttrs(VariableAtkAttr, source, this, move, sourceAtk);
+          applyMoveAttrs(VariableDefAttr, source, this, move, targetDef);
+  
+          if (!isTypeImmune) {
+            damage.value = Math.ceil(((((2 * source.level / 5 + 2) * power.value * sourceAtk.value / targetDef.value) / 50) + 2) * stabMultiplier.value * typeMultiplier.value * arenaAttackTypeMultiplier.value * screenMultiplier.value * ((this.scene.randBattleSeedInt(15) + 85) / 100) * criticalMultiplier.value);
+            if (isPhysical && source.status && source.status.effect === StatusEffect.BURN) {
+              if (!move.getAttrs(BypassBurnDamageReductionAttr).length) {
+                const burnDamageReductionCancelled = new Utils.BooleanHolder(false);
+                applyAbAttrs(BypassBurnDamageReductionAbAttr, source, burnDamageReductionCancelled);
+                if (!burnDamageReductionCancelled.value) {
+                  damage.value = Math.floor(damage.value / 2);
+                }
+              }
+            }
+  
+            applyPreAttackAbAttrs(DamageBoostAbAttr, source, this, battlerMove, damage);
+  
+            /**
+               * For each {@link HitsTagAttr} the move has, doubles the damage of the move if:
+               *  The target has a {@link BattlerTagType} that this move interacts with
+               * AND
+               *  The move doubles damage when used against that tag
+               * */
+            move.getAttrs(HitsTagAttr).map(hta => hta as HitsTagAttr).filter(hta => hta.doubleDamage).forEach(hta => {
+              if (this.getTag(hta.tagType)) {
+                damage.value *= 2;
+              }
+            });
+          }
+  
+          if (this.scene.arena.terrain?.terrainType === TerrainType.MISTY && this.isGrounded() && type === Type.DRAGON) {
+            damage.value = Math.floor(damage.value / 2);
+          }
+  
+          const fixedDamage = new Utils.IntegerHolder(0);
+          applyMoveAttrs(FixedDamageAttr, source, this, move, fixedDamage);
+          if (!isTypeImmune && fixedDamage.value) {
+            damage.value = fixedDamage.value;
             isCritical = false;
+            result = HitResult.EFFECTIVE;
           }
-        }
-        const sourceAtk = new Utils.IntegerHolder(source.getBattleStat(isPhysical ? Stat.ATK : Stat.SPATK, this, null, isCritical));
-        const targetDef = new Utils.IntegerHolder(this.getBattleStat(isPhysical ? Stat.DEF : Stat.SPDEF, source, move, isCritical));
-        const criticalMultiplier = new Utils.NumberHolder(isCritical ? 1.5 : 1);
-        applyAbAttrs(MultCritAbAttr, source, null, criticalMultiplier);
-        const screenMultiplier = new Utils.NumberHolder(1);
-        if (!isCritical) {
-          this.scene.arena.applyTagsForSide(WeakenMoveScreenTag, this.isPlayer() ? ArenaTagSide.PLAYER : ArenaTagSide.ENEMY, move.category, this.scene.currentBattle.double, screenMultiplier);
-        }
-        const isTypeImmune = (typeMultiplier.value * arenaAttackTypeMultiplier.value) === 0;
-        const sourceTypes = source.getTypes();
-        const matchesSourceType = sourceTypes[0] === type || (sourceTypes.length > 1 && sourceTypes[1] === type);
-        const stabMultiplier = new Utils.NumberHolder(1);
-        if (sourceTeraType === Type.UNKNOWN && matchesSourceType) {
-          stabMultiplier.value += 0.5;
-        } else if (sourceTeraType !== Type.UNKNOWN && sourceTeraType === type) {
-          stabMultiplier.value += 0.5;
-        }
-
-        applyAbAttrs(StabBoostAbAttr, source, null, stabMultiplier);
-
-        if (sourceTeraType !== Type.UNKNOWN && matchesSourceType) {
-          stabMultiplier.value = Math.min(stabMultiplier.value + 0.5, 2.25);
-        }
-
-        applyMoveAttrs(VariableAtkAttr, source, this, move, sourceAtk);
-        applyMoveAttrs(VariableDefAttr, source, this, move, targetDef);
-
-        if (!isTypeImmune) {
-          damage.value = Math.ceil(((((2 * source.level / 5 + 2) * power.value * sourceAtk.value / targetDef.value) / 50) + 2) * stabMultiplier.value * typeMultiplier.value * arenaAttackTypeMultiplier.value * screenMultiplier.value * ((this.scene.randBattleSeedInt(15) + 85) / 100) * criticalMultiplier.value);
-          if (isPhysical && source.status && source.status.effect === StatusEffect.BURN) {
-            if (!move.getAttrs(BypassBurnDamageReductionAttr).length) {
-              const burnDamageReductionCancelled = new Utils.BooleanHolder(false);
-              applyAbAttrs(BypassBurnDamageReductionAbAttr, source, burnDamageReductionCancelled);
-              if (!burnDamageReductionCancelled.value) {
-                damage.value = Math.floor(damage.value / 2);
+  
+          if (!result) {
+            if (!typeMultiplier.value) {
+              result = move.id === Moves.SHEER_COLD ? HitResult.IMMUNE : HitResult.NO_EFFECT;
+            } else {
+              const oneHitKo = new Utils.BooleanHolder(false);
+              applyMoveAttrs(OneHitKOAttr, source, this, move, oneHitKo);
+              if (oneHitKo.value) {
+                result = HitResult.ONE_HIT_KO;
+                isCritical = false;
+                damage.value = this.hp;
+              } else if (typeMultiplier.value >= 2) {
+                result = HitResult.SUPER_EFFECTIVE;
+              } else if (typeMultiplier.value >= 1) {
+                result = HitResult.EFFECTIVE;
+              } else {
+                result = HitResult.NOT_VERY_EFFECTIVE;
               }
             }
           }
-
-          applyPreAttackAbAttrs(DamageBoostAbAttr, source, this, battlerMove, damage);
-
-          /**
-             * For each {@link HitsTagAttr} the move has, doubles the damage of the move if:
-             *  The target has a {@link BattlerTagType} that this move interacts with
-             * AND
-             *  The move doubles damage when used against that tag
-             * */
-          move.getAttrs(HitsTagAttr).map(hta => hta as HitsTagAttr).filter(hta => hta.doubleDamage).forEach(hta => {
-            if (this.getTag(hta.tagType)) {
-              damage.value *= 2;
+  
+          if (!fixedDamage.value) {
+            if (!source.isPlayer()) {
+              this.scene.applyModifiers(EnemyDamageBoosterModifier, false, damage);
             }
-          });
-        }
-
-        if (this.scene.arena.terrain?.terrainType === TerrainType.MISTY && this.isGrounded() && type === Type.DRAGON) {
-          damage.value = Math.floor(damage.value / 2);
-        }
-
-        const fixedDamage = new Utils.IntegerHolder(0);
-        applyMoveAttrs(FixedDamageAttr, source, this, move, fixedDamage);
-        if (!isTypeImmune && fixedDamage.value) {
-          damage.value = fixedDamage.value;
-          isCritical = false;
-          result = HitResult.EFFECTIVE;
-        }
-
-        if (!result) {
-          if (!typeMultiplier.value) {
-            result = move.id === Moves.SHEER_COLD ? HitResult.IMMUNE : HitResult.NO_EFFECT;
-          } else {
-            const oneHitKo = new Utils.BooleanHolder(false);
-            applyMoveAttrs(OneHitKOAttr, source, this, move, oneHitKo);
-            if (oneHitKo.value) {
-              result = HitResult.ONE_HIT_KO;
-              isCritical = false;
-              damage.value = this.hp;
-            } else if (typeMultiplier.value >= 2) {
-              result = HitResult.SUPER_EFFECTIVE;
-            } else if (typeMultiplier.value >= 1) {
-              result = HitResult.EFFECTIVE;
-            } else {
-              result = HitResult.NOT_VERY_EFFECTIVE;
+            if (!this.isPlayer()) {
+              this.scene.applyModifiers(EnemyDamageReducerModifier, false, damage);
             }
           }
-        }
-
-        if (!fixedDamage.value) {
-          if (!source.isPlayer()) {
-            this.scene.applyModifiers(EnemyDamageBoosterModifier, false, damage);
+  
+          applyMoveAttrs(ModifiedDamageAttr, source, this, move, damage);
+  
+          if (power.value === 0) {
+            damage.value = 0;
           }
-          if (!this.isPlayer()) {
-            this.scene.applyModifiers(EnemyDamageReducerModifier, false, damage);
-          }
-        }
-
-        applyMoveAttrs(ModifiedDamageAttr, source, this, move, damage);
-
-        if (power.value === 0) {
-          damage.value = 0;
-        }
-
-        console.log("damage", damage.value, move.name, power.value, sourceAtk, targetDef);
-
-        // In case of fatal damage, this tag would have gotten cleared before we could lapse it.
-        const destinyTag = this.getTag(BattlerTagType.DESTINY_BOND);
-
-        const oneHitKo = result === HitResult.ONE_HIT_KO;
-        if (damage.value) {
-          if (this.getHpRatio() === 1) {
-            applyPreDefendAbAttrs(PreDefendFullHpEndureAbAttr, this, source, battlerMove, cancelled, damage);
-          } else if (!this.isPlayer() && damage.value >= this.hp) {
-            this.scene.applyModifiers(EnemyEndureChanceModifier, false, this);
-          }
-
-          /**
-             * We explicitly require to ignore the faint phase here, as we want to show the messages
-             * about the critical hit and the super effective/not very effective messages before the faint phase.
-             */
-          damage.value = this.damageAndUpdate(damage.value, result as DamageResult, isCritical, oneHitKo, oneHitKo, true);
-          this.turnData.damageTaken += damage.value;
-          if (isCritical) {
-            this.scene.queueMessage(i18next.t("battle:hitResultCriticalHit"));
-          }
-          if (source.isPlayer()) {
-            this.scene.validateAchvs(DamageAchv, damage);
-            if (damage.value > this.scene.gameData.gameStats.highestDamage) {
-              this.scene.gameData.gameStats.highestDamage = damage.value;
+  
+          //All incoming damage from moves will be set to 1 if the target is a Disguise user.
+          let preResult = new Utils.NumberHolder(result);
+          applyPreDefendAbAttrs(PreDefendDisguiseNullifyDamageAbAttr, this, source, battlerMove, cancelled, damage , preResult);
+          result = (preResult as Utils.NumberHolder).value;
+          
+          console.log("damage", damage.value, move.name, power.value, sourceAtk, targetDef);
+  
+          // In case of fatal damage, this tag would have gotten cleared before we could lapse it.
+          const destinyTag = this.getTag(BattlerTagType.DESTINY_BOND);
+  
+          const oneHitKo = result === HitResult.ONE_HIT_KO;
+          if (damage.value) {
+            if (this.getHpRatio() === 1) {
+              applyPreDefendAbAttrs(PreDefendFullHpEndureAbAttr, this, source, battlerMove, cancelled, damage);
+            } else if (!this.isPlayer() && damage.value >= this.hp) {
+              this.scene.applyModifiers(EnemyEndureChanceModifier, false, this);
+            }
+  
+            /**
+               * We explicitly require to ignore the faint phase here, as we want to show the messages
+               * about the critical hit and the super effective/not very effective messages before the faint phase.
+               */
+            damage.value = this.damageAndUpdate(damage.value, result as DamageResult, isCritical, oneHitKo, oneHitKo, true);
+            this.turnData.damageTaken += damage.value;
+            if (isCritical) {
+              this.scene.queueMessage(i18next.t("battle:hitResultCriticalHit"));
+            }
+            if (source.isPlayer()) {
+              this.scene.validateAchvs(DamageAchv, damage);
+              if (damage.value > this.scene.gameData.gameStats.highestDamage) {
+                this.scene.gameData.gameStats.highestDamage = damage.value;
+              }
+            }
+            source.turnData.damageDealt += damage.value;
+            source.turnData.currDamageDealt = damage.value;
+            this.battleData.hitCount++;
+            const attackResult = { move: move.id, result: result as DamageResult, damage: damage.value, critical: isCritical, sourceId: source.id };
+            this.turnData.attacksReceived.unshift(attackResult);
+            if (source.isPlayer() && !this.isPlayer()) {
+              this.scene.applyModifiers(DamageMoneyRewardModifier, true, source, damage);
             }
           }
-          source.turnData.damageDealt += damage.value;
-          source.turnData.currDamageDealt = damage.value;
-          this.battleData.hitCount++;
-          const attackResult = { move: move.id, result: result as DamageResult, damage: damage.value, critical: isCritical, sourceId: source.id };
-          this.turnData.attacksReceived.unshift(attackResult);
-          if (source.isPlayer() && !this.isPlayer()) {
-            this.scene.applyModifiers(DamageMoneyRewardModifier, true, source, damage);
+  
+          if (source.turnData.hitsLeft === 1) {
+            switch (result) {
+            case HitResult.SUPER_EFFECTIVE:
+              this.scene.queueMessage(i18next.t("battle:hitResultSuperEffective"));
+              break;
+            case HitResult.NOT_VERY_EFFECTIVE:
+              this.scene.queueMessage(i18next.t("battle:hitResultNotVeryEffective"));
+              break;
+            case HitResult.NO_EFFECT:
+              this.scene.queueMessage(i18next.t("battle:hitResultNoEffect", { pokemonName: this.name }));
+              break;
+            case HitResult.IMMUNE:
+              this.scene.queueMessage(`${this.name} is unaffected!`);
+              break;
+            case HitResult.ONE_HIT_KO:
+              this.scene.queueMessage(i18next.t("battle:hitResultOneHitKO"));
+              break;
+            }
+          }
+  
+          if (this.isFainted()) {
+            this.scene.unshiftPhase(new FaintPhase(this.scene, this.getBattlerIndex(), oneHitKo));
+            this.resetSummonData();
+          }
+  
+          if (damage) {
+            this.scene.clearPhaseQueueSplice();
+  
+            const attacker = this.scene.getPokemonById(source.id);
+            destinyTag?.lapse(attacker, BattlerTagLapseType.CUSTOM);
           }
         }
-
-        if (source.turnData.hitsLeft === 1) {
-          switch (result) {
-          case HitResult.SUPER_EFFECTIVE:
-            this.scene.queueMessage(i18next.t("battle:hitResultSuperEffective"));
-            break;
-          case HitResult.NOT_VERY_EFFECTIVE:
-            this.scene.queueMessage(i18next.t("battle:hitResultNotVeryEffective"));
-            break;
-          case HitResult.NO_EFFECT:
-            this.scene.queueMessage(i18next.t("battle:hitResultNoEffect", { pokemonName: this.name }));
-            break;
-          case HitResult.IMMUNE:
-            this.scene.queueMessage(`${this.name} is unaffected!`);
-            break;
-          case HitResult.ONE_HIT_KO:
-            this.scene.queueMessage(i18next.t("battle:hitResultOneHitKO"));
-            break;
-          }
-        }
-
-        if (this.isFainted()) {
-          this.scene.unshiftPhase(new FaintPhase(this.scene, this.getBattlerIndex(), oneHitKo));
-          this.resetSummonData();
-        }
-
-        if (damage) {
-          this.scene.clearPhaseQueueSplice();
-
-          const attacker = this.scene.getPokemonById(source.id);
-          destinyTag?.lapse(attacker, BattlerTagLapseType.CUSTOM);
-        }
-      }
-      break;
+        break;
     case MoveCategory.STATUS:
       if (!typeless) {
         applyPreDefendAbAttrs(TypeImmunityAbAttr, this, source, battlerMove, cancelled, typeMultiplier);
