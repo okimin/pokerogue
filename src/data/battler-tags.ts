@@ -239,7 +239,7 @@ export class ConfusedTag extends BattlerTag {
         const atk = pokemon.getBattleStat(Stat.ATK);
         const def = pokemon.getBattleStat(Stat.DEF);
         const damage = Math.ceil(((((2 * pokemon.level / 5 + 2) * 40 * atk / def) / 50) + 2) * (pokemon.randSeedInt(15, 85) / 100));
-        pokemon.scene.queueMessage('It hurt itself in its\nconfusion!');
+        pokemon.scene.queueMessage("It hurt itself in its\nconfusion!");
 
         const damageCancelled = new Utils.BooleanHolder(false);
         applyAbAttrs(DisguiseConfusionInteractionAbAttr, pokemon, damageCancelled);

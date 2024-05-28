@@ -330,7 +330,7 @@ export class PreDefendDisguiseNullifyDamageAbAttr extends PreDefendAbAttr {
  */
   applyPreDefend(pokemon: Pokemon, passive: boolean, attacker: Pokemon, move: PokemonMove, cancelled: Utils.BooleanHolder, args: any[]): boolean {
     //If disguise has not been triggered during this battle, and the move will hit the user (User is not inmune and or foe's move failed).
-    if (pokemon.battleData && !pokemon.battleData.abilitiesApplied.includes(Abilities.DISGUISE) && (args[1] as Utils.NumberHolder).value != HitResult.NO_EFFECT && (args[1] as Utils.NumberHolder).value != HitResult.FAIL) {
+    if (pokemon.battleData && !pokemon.battleData.abilitiesApplied.includes(Abilities.DISGUISE) && (args[1] as Utils.NumberHolder).value !== HitResult.NO_EFFECT && (args[1] as Utils.NumberHolder).value !== HitResult.FAIL) {
       //Damage dealt is set to 1 as 0 can cause some issues. This 1 damage is subtracted later.
       console.log(pokemon.battleData);
       (args[0] as Utils.NumberHolder).value = 1;
@@ -342,7 +342,7 @@ export class PreDefendDisguiseNullifyDamageAbAttr extends PreDefendAbAttr {
   }
 
   getTriggerMessage(pokemon: Pokemon, abilityName: string, ...args: any[]): string {
-    return `Its disguise served it as a decoy!`;
+    return "Its disguise served it as a decoy!";
   }
 }
 
@@ -351,8 +351,8 @@ Attribute used for the Disguise ability
 When the user is hit by confusion, Disguise triggers.
 */
 export class DisguiseConfusionInteractionAbAttr extends AbAttr {
-    /**
- * Cancels confusion damage and triggers disguise. 
+  /**
+ * Cancels confusion damage and triggers disguise.
  * @param {Pokemon} pokemon Pokemon has the ability
  * @param {Pokemon} passive N/A
  * @param {Utils.BooleanHolder} damageCancelled If true confusion damage is cancelled.
@@ -361,16 +361,17 @@ export class DisguiseConfusionInteractionAbAttr extends AbAttr {
  */
   apply(pokemon: Pokemon, passive: boolean, damageCancelled: Utils.BooleanHolder, args: any[]): boolean {
     //This checks if ability has been triggered during battle, and if the current form is correct.
-    if((pokemon.battleData && pokemon.battleData.abilitiesApplied.includes(Abilities.DISGUISE)) || pokemon.formIndex === 1)
-    return false;
-    
+    if ((pokemon.battleData && pokemon.battleData.abilitiesApplied.includes(Abilities.DISGUISE)) || pokemon.formIndex === 1) {
+      return false;
+    }
+
     damageCancelled.value = true;
-    const hpLost = Math.round(pokemon.getMaxHp() / 8)
+    const hpLost = Math.round(pokemon.getMaxHp() / 8);
     pokemon.damageAndUpdate(hpLost, HitResult.OTHER);
     pokemon.turnData.damageTaken += hpLost;
     pokemon.battleData.abilitiesApplied.push(Abilities.DISGUISE);
     pokemon.scene.triggerPokemonFormChange(pokemon, SpeciesFormChangeManualTrigger, false);
-    pokemon.scene.queueMessage(`Its disguise served it as a decoy!`);
+    pokemon.scene.queueMessage("Its disguise served it as a decoy!");
     return true;
   }
 
@@ -521,18 +522,19 @@ export class PostDefendDisguiseRecoilAbAttr extends PostDefendAbAttr {
  * @returns {boolean} true if the function succeeds
  */
   applyPostDefend(pokemon: Pokemon, passive: boolean, attacker: Pokemon, move: PokemonMove, hitResult: HitResult, args: any[]): boolean {
-      //If ability has not been triggered during the battle and the hit result is effective...
-      if (pokemon.battleData && !pokemon.battleData.abilitiesApplied.includes(Abilities.DISGUISE) && (hitResult == HitResult.EFFECTIVE)) {
+    //If ability has not been triggered during the battle and the hit result is effective...
+    if (pokemon.battleData && !pokemon.battleData.abilitiesApplied.includes(Abilities.DISGUISE) && (hitResult === HitResult.EFFECTIVE)) {
       //damageDealt is taken into account as it is and not just 1 to prevent issues.
       const damageDealt = attacker.turnData.damageDealt;
-      let hpLost = Math.round(pokemon.getMaxHp() / 8 - damageDealt);
-      if (!hpLost )
-      return false;
-    
+      const hpLost = Math.round(pokemon.getMaxHp() / 8 - damageDealt);
+      if (!hpLost ) {
+        return false;
+      }
+
       pokemon.damageAndUpdate(hpLost , HitResult.OTHER);
       pokemon.turnData.damageTaken += hpLost;
       pokemon.battleData.abilitiesApplied.push(Abilities.DISGUISE);
-      pokemon.scene.queueMessage(getPokemonMessage(pokemon, '\'s disguise was busted!'));
+      pokemon.scene.queueMessage(getPokemonMessage(pokemon, "'s disguise was busted!"));
       return true;
     }
     return false;
@@ -3963,7 +3965,7 @@ export function initAbilities() {
       .attr(PostDefendDisguiseRecoilAbAttr)
       //Disguise has the disguised and busted states. Acording to the state, one can change into the other in certain moments of battle:
       //Before being hit (both ways), after switch in (busted to disguised), after battle starts (busted to disguised), after being hit (disguised to busted).
-      .attr(PreDefendFormChangeAbAttr, p => p.battleData && !p.battleData.abilitiesApplied.includes(Abilities.DISGUISE) ? 0 : 1) 
+      .attr(PreDefendFormChangeAbAttr, p => p.battleData && !p.battleData.abilitiesApplied.includes(Abilities.DISGUISE) ? 0 : 1)
       .attr(PostSummonFormChangeAbAttr, p => p.battleData && !p.battleData.abilitiesApplied.includes(Abilities.DISGUISE) ? 0 : 1)
       .attr(PostBattleInitFormChangeAbAttr, p => p.battleData && !p.battleData.abilitiesApplied.includes(Abilities.DISGUISE) ? 0 : 1)
       .attr(PostDefendFormChangeAbAttr, p => p.battleData && !p.battleData.abilitiesApplied.includes(Abilities.DISGUISE) ? 0 : 1)
