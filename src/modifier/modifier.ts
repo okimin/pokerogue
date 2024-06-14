@@ -522,6 +522,12 @@ export abstract class PokemonHeldItemModifier extends PersistentModifier {
     return 1;
   }
 
+  //Applies to items with chance of activating secondary effects ie Kings Rock
+  getSecondaryChanceMultiplier(pokemon: Pokemon): integer {
+    const sheerForceAffected = allMoves[pokemon.getLastXMoves(0)[0].move].chance >= 0 && pokemon.hasAbility(Abilities.SHEER_FORCE);
+    return (sheerForceAffected)? 0: (pokemon.hasAbility(Abilities.SERENE_GRACE))? 2: 1;
+  }
+
   getMaxStackCount(scene: BattleScene, forThreshold?: boolean): integer {
     const pokemon = this.getPokemon(scene);
     if (!pokemon) {
@@ -832,18 +838,8 @@ export class FlinchChanceModifier extends PokemonHeldItemModifier {
   apply(args: any[]): boolean {
     const pokemon = args[0] as Pokemon;
     const flinched = args[1] as Utils.BooleanHolder;
-    const flinchChanceMultiplier = new Utils.IntegerHolder(1);
 
-    //Modify flinch chance based on ability ie. Sheer Force, Serene Grace
-
-    const SheerForceAffected = allMoves[pokemon.getLastXMoves(0)[0].move].chance >= 0 && pokemon.hasAbility(Abilities.SHEER_FORCE);
-    if (SheerForceAffected) {
-      flinchChanceMultiplier.value *= 0;
-    } else if (pokemon.hasAbility(Abilities.SERENE_GRACE)) {
-      flinchChanceMultiplier.value *= 2;
-    }
-
-    if (!flinched.value && pokemon.randSeedInt(10) < (this.getStackCount() * flinchChanceMultiplier.value)) {
+    if (!flinched.value && pokemon.randSeedInt(10) < (this.getStackCount() * this.getSecondaryChanceMultiplier(pokemon))) {
       flinched.value = true;
       return true;
     }
