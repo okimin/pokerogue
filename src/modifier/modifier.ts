@@ -525,7 +525,13 @@ export abstract class PokemonHeldItemModifier extends PersistentModifier {
   //Applies to items with chance of activating secondary effects ie Kings Rock
   getSecondaryChanceMultiplier(pokemon: Pokemon): integer {
     const sheerForceAffected = allMoves[pokemon.getLastXMoves(0)[0].move].chance >= 0 && pokemon.hasAbility(Abilities.SHEER_FORCE);
-    return (sheerForceAffected)? 0: (pokemon.hasAbility(Abilities.SERENE_GRACE))? 2: 1;
+
+    if (sheerForceAffected) {
+      return 0;
+    } else if (pokemon.hasAbility(Abilities.SERENE_GRACE)) {
+      return 2;
+    }
+    return 1;
   }
 
   getMaxStackCount(scene: BattleScene, forThreshold?: boolean): integer {
