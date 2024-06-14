@@ -22,7 +22,7 @@ import { FormChangeItem, SpeciesFormChangeItemTrigger } from "../data/pokemon-fo
 import { Nature } from "#app/data/nature";
 import * as Overrides from "../overrides";
 import { ModifierType, modifierTypes } from "./modifier-type";
-import { Abilities } from "#app/data/enums/abilities.js";
+import { Abilities } from "#enums/abilities";
 import { allMoves } from "#app/data/move.js";
 import { Command } from "#app/ui/command-ui-handler.js";
 
