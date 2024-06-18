@@ -215,8 +215,6 @@ describe("Abilities - Sheer Force", () => {
       Species.PIDGEOT
     ]);
 
-
-
     game.scene.getEnemyParty()[0].stats[Stat.SPDEF] = 10000;
     game.scene.getEnemyParty()[0].stats[Stat.SPD] = 1;
     expect(game.scene.getParty()[0].formIndex).toBe(0);
@@ -247,7 +245,6 @@ describe("Abilities - Sheer Force", () => {
 
     await game.phaseInterceptor.to(TurnEndPhase);
     expect(game.scene.arena.getTag(ArenaTagType.STEALTH_ROCK)).toBeUndefined();
-
 
   }, 20000);
 
